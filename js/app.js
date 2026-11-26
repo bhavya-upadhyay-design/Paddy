@@ -1,4 +1,4 @@
-/* Paddy Field — famines drawn as a field of paddy.
+/* Unharvested — famines drawn as a field of paddy.
  *
  *  x  : famine start year (base of the stem), on an elastic, zoomable time axis
  *  y  : duration in years (height where the stem meets the grain)

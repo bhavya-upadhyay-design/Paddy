@@ -1,6 +1,6 @@
-# Paddy Field
+# Unharvested
 
-An interactive visualization of famines since 1000 AD, drawn as a field of paddy.
+An interactive visualization of famines since 1600, drawn as a field of paddy (rice still in its husk).
 It is modelled on the interaction of [Poppy Field](https://www.poppyfield.org/).
 
 | Visual | Data |
