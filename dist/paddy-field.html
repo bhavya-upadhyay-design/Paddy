@@ -1830,15 +1830,32 @@ window.TIMELINE_DOMAIN = [1600, 2026];
     spanBar.classList.remove("on");
     spanLabel.classList.remove("on");
   }
+  // The detail card sits well clear of the hovered paddy: beside its whole outline (grain and stem),
+  // on whichever side has room, so the paddy itself stays fully visible.
+  const CARD_GAP = 48;
+  let cardPos = null;
   function placeCard(f) {
     const r = card.getBoundingClientRect();
-    let x = f.hx + 28;
-    let y = f.hy - r.height - 20;
-    if (x + r.width > W - 16) x = f.bx - r.width - 28;
-    x = clamp(x, 16, W - r.width - 16);
-    y = clamp(y, 16, L.baseline - r.height - 10);
-    card.style.left = `${x}px`;
-    card.style.top = `${y}px`;
+    const p = f.g.getBoundingClientRect();           // grain + stem, as drawn this frame
+    const fits = (x) => x >= 16 && x + r.width <= W - 16;
+    let x;
+    if (fits(p.right + CARD_GAP)) x = p.right + CARD_GAP;                     // right of the paddy
+    else if (fits(p.left - CARD_GAP - r.width)) x = p.left - CARD_GAP - r.width; // left of it
+    else x = p.left + p.width / 2 < W / 2 ? W - r.width - 16 : 16;             // far side of the screen
+    // vertically: level with the grain, kept on screen
+    const head = f.headG.getBoundingClientRect();
+    let y = head.top + head.height / 2 - r.height / 2;
+    if (W < 720) {
+      // phones: the card spans the width, so it goes above the paddy, or below it if there is no room
+      x = 16;
+      y = p.top - CARD_GAP / 2 - r.height >= 16 ? p.top - CARD_GAP / 2 - r.height : p.bottom + CARD_GAP / 2;
+    }
+    y = clamp(y, 16, (W < 720 ? H : L.baseline) - r.height - 16);   // desktop: stay above the year axis
+    // ease toward the target so the card glides with the swaying paddy instead of jittering
+    if (!cardPos || cardPos.f !== f) cardPos = { f, x, y };
+    else { cardPos.x += (x - cardPos.x) * 0.2; cardPos.y += (y - cardPos.y) * 0.2; }
+    card.style.left = `${cardPos.x.toFixed(1)}px`;
+    card.style.top = `${cardPos.y.toFixed(1)}px`;
   }
 
   // ---------- grain glyphs for the intro ----------
