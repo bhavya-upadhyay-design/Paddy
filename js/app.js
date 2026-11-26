@@ -254,95 +254,43 @@
     card.style.top = `${cardPos.y.toFixed(1)}px`;
   }
 
-  // ---------- how to read: the anatomy of one famine ----------
-  // One real stem from the data, drawn large and labelled (root, height, grain), then a strip of all
-  // twelve grain versions along the death-toll scale, with that famine marked on it.
-  const shortNum = (n) => (n >= 1e6 ? `${n / 1e6}M` : `${n / 1e3}K`);
-  function buildAnatomy() {
-    const ex = famines.find((f) => f.start === 1943 && f.deaths === 3000000) ||
-      famines.reduce((a, b) => (b.deaths > a.deaths ? b : a));
-    const exName = ex.start === 1943 && ex.deaths === 3000000 ? "Bengal, 1943" : `${ex.region}, ${ex.start}`;
-    const v = ex.variant, hd = HEADS[v.head];
+  // ---------- how to read: three small pictures ----------
+  const GROUND = 132;
+  const plant = (bx, h, variant, scale, lean = 0.5) => {
+    const hd = HEADS[variant.head], hx = bx + h * lean, hy = GROUND - h;
+    const c2x = hx - Math.cos(hd.angle) * h * 0.5, c2y = hy - Math.sin(hd.angle) * h * 0.5;
+    return `<path class="k-stem" pathLength="1" d="M${bx} ${GROUND}C${bx + h * lean * 0.55} ${GROUND - h * 0.12} ${c2x} ${c2y} ${hx} ${hy}"/>
+      <use class="k-head" href="#${variant.id}" transform="translate(${hx} ${hy}) scale(${scale}) translate(${-variant.anchor.x} ${-variant.anchor.y})"/>`;
+  };
+  const ground = `<path class="k-ground" d="M10 ${GROUND}H190"/>`;
+  const mid = VARIANTS[7];                                  // a mid-sized grain for the first two pictures
+  const midScale = 46 / (HEADS[mid.head].bbox[3] - HEADS[mid.head].bbox[1]);
+  // root: a stem planted on one marked year
+  let ticks = "";
+  for (let x = 20; x <= 180; x += 20) ticks += `M${x} ${GROUND + 3}v5`;
+  document.getElementById("keyRoot").innerHTML = ground + `<path class="k-tick" d="${ticks}"/>` +
+    plant(80, 62, mid, midScale) + `<circle class="k-dot" cx="80" cy="${GROUND}" r="4.5"/>`;
+  // height: a short stem and a tall one, same grain
+  document.getElementById("keyHeight").innerHTML = ground + plant(40, 30, mid, midScale) + plant(110, 88, mid, midScale);
+  // grain: small → big, standing on the ground
+  // small, medium, large: shown at clear sizes so the step up reads at a glance
+  const steps = [[3, 30], [7, 56], [11, 96]].map(([k, tall]) => {
+    const vv = VARIANTS[k], h = HEADS[vv.head], sc = tall / (h.bbox[3] - h.bbox[1]);
+    return { vv, h, sc, w: (h.bbox[2] - h.bbox[0]) * sc };
+  });
+  const GAP = 14;
+  let gx = 100 - (steps.reduce((t, g) => t + g.w, 0) + GAP * (steps.length - 1)) / 2, grains = "";
+  steps.forEach(({ vv, h, sc, w }) => {
+    grains += `<use class="k-head" href="#${vv.id}" transform="translate(${(gx - h.bbox[0] * sc).toFixed(1)} ${(GROUND - h.bbox[3] * sc).toFixed(1)}) scale(${sc.toFixed(4)})"/>`;
+    gx += w + GAP;
+  });
+  document.getElementById("keyGrain").innerHTML = ground + grains;
 
-    // --- the labelled plant ---
-    const VW = 720, VH = 330, G = 236;                       // G: ground line
-    const yr0 = Math.floor((ex.start - 6) / 5) * 5, yr1 = yr0 + 15;
-    const X = (yr) => 90 + ((yr - yr0) / (yr1 - yr0)) * 400;
-    const bx = X(ex.start);
-    const stemH = 40 + Math.min(ex.duration, 6) * 34;       // taller for longer famines
-    const s = 150 / (hd.bbox[3] - hd.bbox[1]);              // grain about 150px tall
-    const hx = bx + 46, hy = G - stemH;
-    const ang = hd.angle;
-    const c1 = [bx + 46 * 0.55, G - stemH * 0.12], c2 = [hx - Math.cos(ang) * stemH * 0.5, hy - Math.sin(ang) * stemH * 0.5];
-    const stem = `M${bx} ${G}C${c1} ${c2} ${hx} ${hy}`;
-    // centre of the grain, for its leader line
-    const gc = [hx + ((hd.bbox[0] + hd.bbox[2]) / 2 - v.anchor.x) * s, hy + ((hd.bbox[1] + hd.bbox[3]) / 2 - v.anchor.y) * s];
-
-    let ticks = "", yearLabels = "";
-    for (let yr = yr0; yr <= yr1; yr++) {
-      const x = X(yr), major = yr % 5 === 0;
-      ticks += `M${x.toFixed(1)} ${G + 3}v${major ? 6 : 3}`;
-      if (major && yr !== ex.start) yearLabels += `<text class="an-year" x="${x}" y="${G + 24}" text-anchor="middle">${yr}</text>`;
-    }
-    const note = (n, x, y, anchor, title, desc, value) => `
-      <g class="an-note an-note-${n}">
-        <text x="${x}" y="${y}" text-anchor="${anchor}"><tspan class="an-key">${n}. ${title}</tspan>
-          <tspan class="an-desc" x="${x}" dy="17">${desc}</tspan>${value ? `
-          <tspan class="an-value" x="${x}" dy="24">${value}</tspan>` : ""}</text>
-      </g>`;
-    const noteX = VW - 200;                                  // grain label column, clear of the grain
-    const brX = bx - 36;
-    document.getElementById("anatomyPlant").setAttribute("viewBox", `0 0 ${VW} ${VH}`);
-    document.getElementById("anatomyPlant").innerHTML = `
-      <path class="an-ground" d="M60 ${G}H${VW - 40}"/>
-      <path class="an-ticks" d="${ticks}"/>
-      ${yearLabels}
-      <text class="an-year an-year-root" x="${bx}" y="${G + 24}" text-anchor="middle">${ex.start}</text>
-      <path class="an-stem" pathLength="1" d="${stem}"/>
-      <g class="an-head"><use href="#${v.id}" transform="translate(${hx} ${hy}) scale(${s.toFixed(4)}) translate(${-v.anchor.x} ${-v.anchor.y})"/></g>
-      <circle class="an-dot" cx="${bx}" cy="${G}" r="3.5"/>
-      <g class="an-note an-note-2"><path class="an-bracket" d="M${brX + 6} ${G}H${brX}V${hy}H${brX + 6}"/></g>
-      <g class="an-note an-note-3"><path class="an-leader" d="M${gc[0].toFixed(1)} ${gc[1].toFixed(1)}L${noteX - 22} 76H${noteX - 10}"/><circle class="an-dot" cx="${gc[0].toFixed(1)}" cy="${gc[1].toFixed(1)}" r="3"/></g>
-      <g class="an-note an-note-1"><path class="an-leader" d="M${bx} ${G + 32}V${G + 44}"/></g>
-      ${note(1, bx, G + 62, "middle", "ROOT", "the year it began", "")}
-      ${note(2, brX - 12, (G + hy) / 2 - 18, "end", "HEIGHT", "how long it lasted", `${ex.duration} year${ex.duration > 1 ? "s" : ""}`)}
-      ${note(3, noteX, 64, "start", "GRAIN", "the lives it took", fmtDeaths(ex.deaths))}
-      <text class="an-example" x="${noteX}" y="130">${exName}</text>
-      ${[[bx, G + 62], [brX - 22, (G + hy) / 2], [noteX + 8, 76]].map(([cx, cy], k) =>
-        `<g class="an-num"><circle cx="${cx}" cy="${cy}" r="17"/><text x="${cx}" y="${cy + 7}" text-anchor="middle">${k + 1}</text></g>`).join("")}`;
-
-    // --- the grain scale: all twelve versions, sized as in the field ---
-    const biggest = HEADS[HEADS.length - 1];
-    const base = 84 / ((biggest.bbox[3] - biggest.bbox[1]) * SIZE_BOOST[HEADS.length - 1] * 0.98);
-    const GY = 92;                                          // glyph baseline
-    let x = 8, glyphs = "", seps = "", mark = "";
-    VARIANTS.forEach((vv, k) => {
-      const h = HEADS[vv.head];
-      const sc = base * SIZE_BOOST[vv.head] * 0.98;
-      const w = (h.bbox[2] - h.bbox[0]) * sc;
-      const slot = Math.max(w, 26);
-      const left = x + (slot - w) / 2;
-      glyphs += `<use href="#${vv.id}" transform="translate(${(left - h.bbox[0] * sc).toFixed(1)} ${(GY - h.bbox[3] * sc).toFixed(1)}) scale(${sc.toFixed(4)})"/>`;
-      if (vv === v) mark = `<path class="an-mark" d="M${x + slot / 2} ${GY + 30}l5 8h-10z"/><text class="an-example" x="${x + slot / 2}" y="${GY + 52}" text-anchor="middle">${exName}</text>`;
-      x += slot + 8;
-      if (!vv.light && vv.head < HEADS.length - 1) {
-        const sx = x - 4;
-        seps += `<path class="an-sep" d="M${sx} ${GY + 2}v8"/><text class="an-thr" x="${sx}" y="${GY + 24}" text-anchor="middle">${shortNum(BINS[vv.head].max)}</text>`;
-      }
-    });
-    const SW = x;
-    document.getElementById("grainScale").setAttribute("viewBox", `0 0 ${SW} 150`);
-    document.getElementById("grainScale").innerHTML = `
-      <path class="an-ground" d="M0 ${GY + 6}H${SW}"/>${glyphs}${seps}${mark}
-      <text class="an-end" x="0" y="${GY + 52}">fewer deaths</text>
-      <text class="an-end" x="${SW}" y="${GY + 52}" text-anchor="end">more deaths</text>`;
-  }
-  buildAnatomy();
-  const anatomy = document.getElementById("anatomy");
+  const keyEl = document.getElementById("key");
   function playAnatomy() {
-    anatomy.classList.remove("play");
-    void anatomy.getBoundingClientRect();   // restart the drawing animation
-    anatomy.classList.add("play");
+    keyEl.classList.remove("play");
+    void keyEl.getBoundingClientRect();   // restart the grow-in animation
+    keyEl.classList.add("play");
   }
   playAnatomy();
 

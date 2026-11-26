@@ -32,17 +32,11 @@
         <p>&ldquo;Starvation is the characteristic of some people not having enough food to eat. It is not the characteristic of there being not enough food to eat.&rdquo;</p>
         <cite>Amartya Sen, <i>Poverty and Famines</i>, 1981</cite>
       </blockquote>
-      <figure class="anatomy" id="anatomy">
-        <figcaption class="anatomy-title" id="anatomyTitle">How to read one stem</figcaption>
-        <svg id="anatomyPlant" class="anatomy-plant" role="img" aria-labelledby="anatomyTitle"></svg>
-        <ol class="anatomy-list">
-          <li><strong>Root</strong>: the year the famine began.</li>
-          <li><strong>Height</strong>: how many years it lasted.</li>
-          <li><strong>Grain</strong>: the lives it took. Larger, fuller grain means more deaths.</li>
-        </ol>
-        <p class="anatomy-title">Grain, from fewest to most deaths</p>
-        <svg id="grainScale" class="grain-scale" role="img" aria-label="Twelve grain sizes, from fewest to most deaths"></svg>
-      </figure>
+      <div class="key" id="key">
+        <figure><svg id="keyRoot" viewBox="0 0 200 150" aria-hidden="true"></svg><figcaption><strong>Root</strong> year it began</figcaption></figure>
+        <figure><svg id="keyHeight" viewBox="0 0 200 150" aria-hidden="true"></svg><figcaption><strong>Height</strong> years it lasted</figcaption></figure>
+        <figure><svg id="keyGrain" viewBox="0 0 200 150" aria-hidden="true"></svg><figcaption><strong>Grain</strong> lives lost</figcaption></figure>
+      </div>
       <button class="enter" id="enterBtn" type="button">Enter the field</button>
       <p class="fine">Death tolls are estimates. Hover any paddy for its figures.</p>
     </div>

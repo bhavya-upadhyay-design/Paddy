@@ -225,7 +225,7 @@ body {
   overflow-y: auto;
 }
 .intro.gone { opacity: 0; visibility: hidden; }
-.intro-inner { width: 100%; max-width: 720px; min-width: 0; text-align: center; }
+.intro-inner { width: 100%; max-width: 620px; min-width: 0; text-align: center; }
 .intro h2 {
   font-family: "Fraunces", Georgia, serif;
   font-weight: 300;
@@ -237,42 +237,22 @@ body {
 .quote { margin: 0 auto 28px; max-width: 480px; padding: 0; }
 .quote p { margin: 0 0 6px; font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 300; font-size: 16px; line-height: 1.5; color: var(--ink); }
 .quote cite { font-style: normal; font-size: 12px; letter-spacing: 0.04em; color: var(--ink-soft); }
-/* ---------- how to read: anatomy of one stem ---------- */
-.anatomy { margin: 0 auto 26px; max-width: 720px; text-align: left; }
-.anatomy-title {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-soft); margin: 0 0 4px; text-align: center;
-}
-.anatomy-plant, .grain-scale { display: block; width: 100%; height: auto; overflow: visible; }
-.anatomy-plant { margin-bottom: 18px; }
-.grain-scale { max-width: 560px; margin: 8px auto 0; }
-.an-ground { stroke: var(--ink-faint); stroke-dasharray: 1 4; fill: none; }
-.an-ticks, .an-sep { stroke: var(--ink-faint); fill: none; }
-.an-year { font-size: 11px; fill: var(--ink-soft); }
-.an-year-root { fill: var(--rust); font-weight: 600; }
-.an-stem { fill: none; stroke: var(--stem); stroke-width: 1.6; stroke-linecap: round; }
-.an-dot { fill: var(--rust); }
-.an-bracket, .an-leader { fill: none; stroke: var(--ink-soft); stroke-width: 1; }
-.an-key { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; fill: var(--ink); }
-.an-desc { font-size: 14px; fill: var(--ink-soft); }
-.an-value { font-family: "Fraunces", Georgia, serif; font-size: 22px; fill: var(--rust); }
-.an-example { font-size: 11px; font-style: italic; fill: var(--ink-soft); }
-.an-thr { font-size: 11px; fill: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.an-end { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink-soft); }
-.an-mark { fill: var(--rust); }
-.anatomy-list { display: none; }
-.an-num { display: none; }
-.an-num circle { fill: var(--rust); }
-.an-num text { fill: #fff; font-size: 20px; font-weight: 600; }
-
-/* drawn in when the intro opens: stem grows, grain appears, then each label */
-.anatomy.play .an-stem { stroke-dasharray: 1; animation: an-draw 1.1s ease-out both; }
-.anatomy.play .an-head { animation: an-fade 0.7s ease-out 0.8s both; }
-.anatomy.play .an-note-1 { animation: an-fade 0.5s ease-out 1.2s both; }
-.anatomy.play .an-note-2 { animation: an-fade 0.5s ease-out 1.45s both; }
-.anatomy.play .an-note-3 { animation: an-fade 0.5s ease-out 1.7s both; }
-@keyframes an-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-@keyframes an-fade { from { opacity: 0; } to { opacity: 1; } }
+/* ---------- how to read: three small pictures ---------- */
+.key { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; max-width: 600px; margin: 0 auto 30px; }
+.key figure { margin: 0; text-align: center; }
+.key svg { display: block; width: 100%; height: auto; overflow: visible; }
+.key figcaption { margin-top: 6px; font-size: 14px; color: var(--ink-soft); }
+.key figcaption strong { display: block; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); margin-bottom: 2px; }
+.k-ground { stroke: var(--ink-faint); stroke-dasharray: 1 4; fill: none; }
+.k-tick { stroke: var(--ink-faint); fill: none; }
+.k-stem { fill: none; stroke: var(--stem); stroke-width: 1.6; stroke-linecap: round; }
+.k-dot { fill: var(--rust); }
+.key.play .k-stem { stroke-dasharray: 1; animation: k-draw 1s ease-out both; }
+.key.play .k-head { animation: k-fade 0.6s ease-out 0.7s both; }
+.key.play figure:nth-child(2) .k-stem, .key.play figure:nth-child(2) .k-head { animation-delay: 0.3s, 1s; }
+.key.play figure:nth-child(3) .k-head { animation-delay: 1.2s; }
+@keyframes k-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes k-fade { from { opacity: 0; } to { opacity: 1; } }
 
 .enter {
   font: 600 14px/1 "DM Sans", sans-serif;
@@ -296,10 +276,8 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .masthead { left: 16px; top: 16px; }
   .about-btn { right: 16px; top: 16px; }
   .legend { right: 16px; left: 16px; top: auto; bottom: 34px; justify-content: space-between; display: none; }
-  .an-note text, .an-example { display: none; }
-  .anatomy-list { display: block; margin: 0 0 14px; padding-left: 22px; font-size: 14px; line-height: 1.5; }
-  .grain-scale .an-example { display: block; }
-  .an-num { display: inline; }
+  .key { gap: 10px; }
+  .key figcaption { font-size: 12px; }
   .card { width: calc(100vw - 32px); left: 16px !important; }
 }
 
@@ -331,17 +309,11 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
         <p>&ldquo;Starvation is the characteristic of some people not having enough food to eat. It is not the characteristic of there being not enough food to eat.&rdquo;</p>
         <cite>Amartya Sen, <i>Poverty and Famines</i>, 1981</cite>
       </blockquote>
-      <figure class="anatomy" id="anatomy">
-        <figcaption class="anatomy-title" id="anatomyTitle">How to read one stem</figcaption>
-        <svg id="anatomyPlant" class="anatomy-plant" role="img" aria-labelledby="anatomyTitle"></svg>
-        <ol class="anatomy-list">
-          <li><strong>Root</strong>: the year the famine began.</li>
-          <li><strong>Height</strong>: how many years it lasted.</li>
-          <li><strong>Grain</strong>: the lives it took. Larger, fuller grain means more deaths.</li>
-        </ol>
-        <p class="anatomy-title">Grain, from fewest to most deaths</p>
-        <svg id="grainScale" class="grain-scale" role="img" aria-label="Twelve grain sizes, from fewest to most deaths"></svg>
-      </figure>
+      <div class="key" id="key">
+        <figure><svg id="keyRoot" viewBox="0 0 200 150" aria-hidden="true"></svg><figcaption><strong>Root</strong> year it began</figcaption></figure>
+        <figure><svg id="keyHeight" viewBox="0 0 200 150" aria-hidden="true"></svg><figcaption><strong>Height</strong> years it lasted</figcaption></figure>
+        <figure><svg id="keyGrain" viewBox="0 0 200 150" aria-hidden="true"></svg><figcaption><strong>Grain</strong> lives lost</figcaption></figure>
+      </div>
       <button class="enter" id="enterBtn" type="button">Enter the field</button>
       <p class="fine">Death tolls are estimates. Hover any paddy for its figures.</p>
     </div>
@@ -1893,95 +1865,43 @@ window.TIMELINE_DOMAIN = [1600, 2026];
     card.style.top = `${cardPos.y.toFixed(1)}px`;
   }
 
-  // ---------- how to read: the anatomy of one famine ----------
-  // One real stem from the data, drawn large and labelled (root, height, grain), then a strip of all
-  // twelve grain versions along the death-toll scale, with that famine marked on it.
-  const shortNum = (n) => (n >= 1e6 ? `${n / 1e6}M` : `${n / 1e3}K`);
-  function buildAnatomy() {
-    const ex = famines.find((f) => f.start === 1943 && f.deaths === 3000000) ||
-      famines.reduce((a, b) => (b.deaths > a.deaths ? b : a));
-    const exName = ex.start === 1943 && ex.deaths === 3000000 ? "Bengal, 1943" : `${ex.region}, ${ex.start}`;
-    const v = ex.variant, hd = HEADS[v.head];
+  // ---------- how to read: three small pictures ----------
+  const GROUND = 132;
+  const plant = (bx, h, variant, scale, lean = 0.5) => {
+    const hd = HEADS[variant.head], hx = bx + h * lean, hy = GROUND - h;
+    const c2x = hx - Math.cos(hd.angle) * h * 0.5, c2y = hy - Math.sin(hd.angle) * h * 0.5;
+    return `<path class="k-stem" pathLength="1" d="M${bx} ${GROUND}C${bx + h * lean * 0.55} ${GROUND - h * 0.12} ${c2x} ${c2y} ${hx} ${hy}"/>
+      <use class="k-head" href="#${variant.id}" transform="translate(${hx} ${hy}) scale(${scale}) translate(${-variant.anchor.x} ${-variant.anchor.y})"/>`;
+  };
+  const ground = `<path class="k-ground" d="M10 ${GROUND}H190"/>`;
+  const mid = VARIANTS[7];                                  // a mid-sized grain for the first two pictures
+  const midScale = 46 / (HEADS[mid.head].bbox[3] - HEADS[mid.head].bbox[1]);
+  // root: a stem planted on one marked year
+  let ticks = "";
+  for (let x = 20; x <= 180; x += 20) ticks += `M${x} ${GROUND + 3}v5`;
+  document.getElementById("keyRoot").innerHTML = ground + `<path class="k-tick" d="${ticks}"/>` +
+    plant(80, 62, mid, midScale) + `<circle class="k-dot" cx="80" cy="${GROUND}" r="4.5"/>`;
+  // height: a short stem and a tall one, same grain
+  document.getElementById("keyHeight").innerHTML = ground + plant(40, 30, mid, midScale) + plant(110, 88, mid, midScale);
+  // grain: small → big, standing on the ground
+  // small, medium, large: shown at clear sizes so the step up reads at a glance
+  const steps = [[3, 30], [7, 56], [11, 96]].map(([k, tall]) => {
+    const vv = VARIANTS[k], h = HEADS[vv.head], sc = tall / (h.bbox[3] - h.bbox[1]);
+    return { vv, h, sc, w: (h.bbox[2] - h.bbox[0]) * sc };
+  });
+  const GAP = 14;
+  let gx = 100 - (steps.reduce((t, g) => t + g.w, 0) + GAP * (steps.length - 1)) / 2, grains = "";
+  steps.forEach(({ vv, h, sc, w }) => {
+    grains += `<use class="k-head" href="#${vv.id}" transform="translate(${(gx - h.bbox[0] * sc).toFixed(1)} ${(GROUND - h.bbox[3] * sc).toFixed(1)}) scale(${sc.toFixed(4)})"/>`;
+    gx += w + GAP;
+  });
+  document.getElementById("keyGrain").innerHTML = ground + grains;
 
-    // --- the labelled plant ---
-    const VW = 720, VH = 330, G = 236;                       // G: ground line
-    const yr0 = Math.floor((ex.start - 6) / 5) * 5, yr1 = yr0 + 15;
-    const X = (yr) => 90 + ((yr - yr0) / (yr1 - yr0)) * 400;
-    const bx = X(ex.start);
-    const stemH = 40 + Math.min(ex.duration, 6) * 34;       // taller for longer famines
-    const s = 150 / (hd.bbox[3] - hd.bbox[1]);              // grain about 150px tall
-    const hx = bx + 46, hy = G - stemH;
-    const ang = hd.angle;
-    const c1 = [bx + 46 * 0.55, G - stemH * 0.12], c2 = [hx - Math.cos(ang) * stemH * 0.5, hy - Math.sin(ang) * stemH * 0.5];
-    const stem = `M${bx} ${G}C${c1} ${c2} ${hx} ${hy}`;
-    // centre of the grain, for its leader line
-    const gc = [hx + ((hd.bbox[0] + hd.bbox[2]) / 2 - v.anchor.x) * s, hy + ((hd.bbox[1] + hd.bbox[3]) / 2 - v.anchor.y) * s];
-
-    let ticks = "", yearLabels = "";
-    for (let yr = yr0; yr <= yr1; yr++) {
-      const x = X(yr), major = yr % 5 === 0;
-      ticks += `M${x.toFixed(1)} ${G + 3}v${major ? 6 : 3}`;
-      if (major && yr !== ex.start) yearLabels += `<text class="an-year" x="${x}" y="${G + 24}" text-anchor="middle">${yr}</text>`;
-    }
-    const note = (n, x, y, anchor, title, desc, value) => `
-      <g class="an-note an-note-${n}">
-        <text x="${x}" y="${y}" text-anchor="${anchor}"><tspan class="an-key">${n}. ${title}</tspan>
-          <tspan class="an-desc" x="${x}" dy="17">${desc}</tspan>${value ? `
-          <tspan class="an-value" x="${x}" dy="24">${value}</tspan>` : ""}</text>
-      </g>`;
-    const noteX = VW - 200;                                  // grain label column, clear of the grain
-    const brX = bx - 36;
-    document.getElementById("anatomyPlant").setAttribute("viewBox", `0 0 ${VW} ${VH}`);
-    document.getElementById("anatomyPlant").innerHTML = `
-      <path class="an-ground" d="M60 ${G}H${VW - 40}"/>
-      <path class="an-ticks" d="${ticks}"/>
-      ${yearLabels}
-      <text class="an-year an-year-root" x="${bx}" y="${G + 24}" text-anchor="middle">${ex.start}</text>
-      <path class="an-stem" pathLength="1" d="${stem}"/>
-      <g class="an-head"><use href="#${v.id}" transform="translate(${hx} ${hy}) scale(${s.toFixed(4)}) translate(${-v.anchor.x} ${-v.anchor.y})"/></g>
-      <circle class="an-dot" cx="${bx}" cy="${G}" r="3.5"/>
-      <g class="an-note an-note-2"><path class="an-bracket" d="M${brX + 6} ${G}H${brX}V${hy}H${brX + 6}"/></g>
-      <g class="an-note an-note-3"><path class="an-leader" d="M${gc[0].toFixed(1)} ${gc[1].toFixed(1)}L${noteX - 22} 76H${noteX - 10}"/><circle class="an-dot" cx="${gc[0].toFixed(1)}" cy="${gc[1].toFixed(1)}" r="3"/></g>
-      <g class="an-note an-note-1"><path class="an-leader" d="M${bx} ${G + 32}V${G + 44}"/></g>
-      ${note(1, bx, G + 62, "middle", "ROOT", "the year it began", "")}
-      ${note(2, brX - 12, (G + hy) / 2 - 18, "end", "HEIGHT", "how long it lasted", `${ex.duration} year${ex.duration > 1 ? "s" : ""}`)}
-      ${note(3, noteX, 64, "start", "GRAIN", "the lives it took", fmtDeaths(ex.deaths))}
-      <text class="an-example" x="${noteX}" y="130">${exName}</text>
-      ${[[bx, G + 62], [brX - 22, (G + hy) / 2], [noteX + 8, 76]].map(([cx, cy], k) =>
-        `<g class="an-num"><circle cx="${cx}" cy="${cy}" r="17"/><text x="${cx}" y="${cy + 7}" text-anchor="middle">${k + 1}</text></g>`).join("")}`;
-
-    // --- the grain scale: all twelve versions, sized as in the field ---
-    const biggest = HEADS[HEADS.length - 1];
-    const base = 84 / ((biggest.bbox[3] - biggest.bbox[1]) * SIZE_BOOST[HEADS.length - 1] * 0.98);
-    const GY = 92;                                          // glyph baseline
-    let x = 8, glyphs = "", seps = "", mark = "";
-    VARIANTS.forEach((vv, k) => {
-      const h = HEADS[vv.head];
-      const sc = base * SIZE_BOOST[vv.head] * 0.98;
-      const w = (h.bbox[2] - h.bbox[0]) * sc;
-      const slot = Math.max(w, 26);
-      const left = x + (slot - w) / 2;
-      glyphs += `<use href="#${vv.id}" transform="translate(${(left - h.bbox[0] * sc).toFixed(1)} ${(GY - h.bbox[3] * sc).toFixed(1)}) scale(${sc.toFixed(4)})"/>`;
-      if (vv === v) mark = `<path class="an-mark" d="M${x + slot / 2} ${GY + 30}l5 8h-10z"/><text class="an-example" x="${x + slot / 2}" y="${GY + 52}" text-anchor="middle">${exName}</text>`;
-      x += slot + 8;
-      if (!vv.light && vv.head < HEADS.length - 1) {
-        const sx = x - 4;
-        seps += `<path class="an-sep" d="M${sx} ${GY + 2}v8"/><text class="an-thr" x="${sx}" y="${GY + 24}" text-anchor="middle">${shortNum(BINS[vv.head].max)}</text>`;
-      }
-    });
-    const SW = x;
-    document.getElementById("grainScale").setAttribute("viewBox", `0 0 ${SW} 150`);
-    document.getElementById("grainScale").innerHTML = `
-      <path class="an-ground" d="M0 ${GY + 6}H${SW}"/>${glyphs}${seps}${mark}
-      <text class="an-end" x="0" y="${GY + 52}">fewer deaths</text>
-      <text class="an-end" x="${SW}" y="${GY + 52}" text-anchor="end">more deaths</text>`;
-  }
-  buildAnatomy();
-  const anatomy = document.getElementById("anatomy");
+  const keyEl = document.getElementById("key");
   function playAnatomy() {
-    anatomy.classList.remove("play");
-    void anatomy.getBoundingClientRect();   // restart the drawing animation
-    anatomy.classList.add("play");
+    keyEl.classList.remove("play");
+    void keyEl.getBoundingClientRect();   // restart the grow-in animation
+    keyEl.classList.add("play");
   }
   playAnatomy();
 
