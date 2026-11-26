@@ -270,8 +270,15 @@
   for (let x = 20; x <= 180; x += 20) ticks += `M${x} ${GROUND + 3}v5`;
   document.getElementById("keyRoot").innerHTML = ground + `<path class="k-tick" d="${ticks}"/>` +
     plant(80, 62, mid, midScale) + `<circle class="k-dot" cx="80" cy="${GROUND}" r="4.5"/>`;
-  // height: a short stem and a tall one, same grain
-  document.getElementById("keyHeight").innerHTML = ground + plant(40, 30, mid, midScale) + plant(110, 88, mid, midScale);
+  // height: one stem beside a small year scale, with a faint guide from its top to the scale
+  const PER_YEAR = 30, years = 3, sx = 52, stemX = 92, stemTop = GROUND - years * PER_YEAR;
+  let scale = `<path class="k-scale" d="M${sx} ${GROUND}V${stemTop - 6}`;
+  for (let y = 1; y <= years; y++) scale += `M${sx - 4} ${GROUND - y * PER_YEAR}h8`;
+  scale += `"/>`;
+  for (let y = 1; y <= years; y++) scale += `<text class="k-num" x="${sx - 9}" y="${GROUND - y * PER_YEAR + 4}" text-anchor="end">${y}</text>`;
+  scale += `<text class="k-num" x="${sx}" y="${stemTop - 12}" text-anchor="middle">yrs</text>`;
+  const guide = `<path class="k-guide" d="M${sx + 4} ${stemTop}H${stemX + years * PER_YEAR * 0.5}"/>`;
+  document.getElementById("keyHeight").innerHTML = ground + scale + guide + plant(stemX, years * PER_YEAR, mid, midScale);
   // grain: small → big, standing on the ground
   // small, medium, large: shown at clear sizes so the step up reads at a glance
   const steps = [[3, 30], [7, 56], [11, 96]].map(([k, tall]) => {
