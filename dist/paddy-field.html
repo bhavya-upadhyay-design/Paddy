@@ -1886,11 +1886,9 @@ window.TIMELINE_DOMAIN = [1600, 2026];
     plant(80, 62, mid, midScale) + `<circle class="k-dot" cx="80" cy="${GROUND}" r="4.5"/>`;
   // height: one stem beside a small year scale, with a faint guide from its top to the scale
   const PER_YEAR = 30, years = 3, sx = 52, stemX = 92, stemTop = GROUND - years * PER_YEAR;
-  let scale = `<path class="k-scale" d="M${sx} ${GROUND}V${stemTop - 6}`;
-  for (let y = 1; y <= years; y++) scale += `M${sx - 4} ${GROUND - y * PER_YEAR}h8`;
-  scale += `"/>`;
-  for (let y = 1; y <= years; y++) scale += `<text class="k-num" x="${sx - 9}" y="${GROUND - y * PER_YEAR + 4}" text-anchor="end">${y}</text>`;
-  scale += `<text class="k-num" x="${sx}" y="${stemTop - 12}" text-anchor="middle">yrs</text>`;
+  // a plain line with a short cap at each end, labelled only "yrs"
+  let scale = `<path class="k-scale" d="M${sx} ${GROUND}V${stemTop}M${sx - 5} ${GROUND}h10M${sx - 5} ${stemTop}h10"/>`;
+  scale += `<text class="k-num" x="${sx}" y="${stemTop - 9}" text-anchor="middle">yrs</text>`;
   const guide = `<path class="k-guide" d="M${sx + 4} ${stemTop}H${stemX + years * PER_YEAR * 0.5}"/>`;
   document.getElementById("keyHeight").innerHTML = ground + scale + guide + plant(stemX, years * PER_YEAR, mid, midScale);
   // grain: small → big, standing on the ground
