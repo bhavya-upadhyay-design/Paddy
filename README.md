@@ -28,7 +28,7 @@ The timeline starts at `START_YEAR` (1600) in the script; earlier famines are le
 
 ## Files
 - `index.html`, `css/style.css`, `js/app.js`: the site. Plain HTML, CSS and JS, with no build step.
-- `js/paddy-heads.js`: the grain-head artwork exported from the Figma paddy frames, with stem anchor points.
+- `js/paddy-heads.js`: the grain-head artwork exported from the Figma paddy frames, with stem anchor points, plus each head's in-between version (`light`), built by `node scripts/build_light_heads.js`.
 - `assets/paddy/paddy-1…6.svg`: the original Figma exports, smallest → biggest.
 
 ## Run locally

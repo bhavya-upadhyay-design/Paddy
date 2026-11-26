@@ -44,20 +44,12 @@
   });
 
   // ---------- in-between grain versions ----------
-  // Each Figma paddy gets a sparser "in-between" version: the outermost tip grains are dropped
-  // (about a quarter of them, keeping at least 4), so it sits between that paddy and the next smaller one.
+  // Each Figma paddy also has a sparser "in-between" version (built by scripts/build_light_heads.js):
+  // fewer grains, the top grain on the left, and a very small grain finishing the tip.
   // VARIANTS runs smallest → biggest: [1 light, 1 full, 2 light, 2 full, … 6 full].
   const VARIANTS = [];
   HEADS.forEach((h, i) => {
-    const dist = (p) => {
-      const m = p.d.match(/M\s*([-\d.]+)[ ,]([-\d.]+)/);
-      return Math.hypot(+m[1] - h.anchor.x, +m[2] - h.anchor.y);
-    };
-    const keep = Math.max(4, Math.round(h.paths.length * 0.75));
-    const cutoff = h.paths.map(dist).sort((a, b) => a - b)[keep - 1];
-    let kept = 0;
-    const light = h.paths.filter((p) => dist(p) <= cutoff && kept++ < keep);
-    VARIANTS.push({ head: i, light: true, paths: light, id: `head-${i}-light` });
+    VARIANTS.push({ head: i, light: true, paths: h.light, id: `head-${i}-light` });
     VARIANTS.push({ head: i, light: false, paths: h.paths, id: `head-${i}-full` });
   });
 
@@ -147,7 +139,7 @@
   // reusable head artwork as <symbol>-like groups in defs
   VARIANTS.forEach((v) => {
     const g = el("g", { id: v.id }, defs);
-    v.paths.forEach((p) => el("path", { d: p.d, fill: p.fill }, g));
+    v.paths.forEach((p) => el("path", p.transform ? { d: p.d, fill: p.fill, transform: p.transform } : { d: p.d, fill: p.fill }, g));
   });
 
   const gAxis = el("g", { class: "axis" }, svg);
@@ -253,7 +245,7 @@
     // all legend glyphs share one scale so their sizes compare honestly
     const s = (size * SIZE_BOOST[i]) / (HEADS[HEADS.length - 1].bbox[3] - HEADS[HEADS.length - 1].bbox[1]);
     const w = (x1 - x0) * s, hh = (y1 - y0) * s;
-    return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${paths.map((p) => `<path d="${p.d}" fill="${p.fill}"/>`).join("")}</svg>`;
+    return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${paths.map((p) => `<path d="${p.d}" fill="${p.fill}"${p.transform ? ` transform="${p.transform}"` : ""}/>`).join("")}</svg>`;
   }
   document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 46, true) + headSvg(i, 46)).join("");
   document.getElementById("subtitle").textContent =
