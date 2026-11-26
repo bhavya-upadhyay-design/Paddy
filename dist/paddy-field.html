@@ -120,6 +120,7 @@ body {
   transition: opacity 0.25s;
 }
 .legend-item svg { display: block; overflow: visible; }
+.legend-pair { display: flex; align-items: flex-end; gap: 1px; }
 .legend-item span {
   font-size: 10px;
   color: var(--ink-soft);
@@ -274,7 +275,7 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 <body>
   <header class="masthead">
     <h1>Paddy Field</h1>
-    <p>110 famines since 1064 and the lives they took</p>
+    <p id="subtitle">Famines and the lives they took</p>
   </header>
 
   <button class="about-btn" id="aboutBtn" type="button">How to read</button>
@@ -298,7 +299,7 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
         </div>
         <div class="howto-item">
           <div class="mini-legend" id="introLegend"></div>
-          <p><strong>Grain</strong>: small, sparse grain means fewer deaths. Large, full grain means more.</p>
+          <p><strong>Grain</strong>: small, sparse grain means fewer deaths. Large, full grain means more. Grain size also grows gradually within each band.</p>
         </div>
       </div>
       <button class="enter" id="enterBtn" type="button">Enter the field</button>
@@ -672,79 +673,9 @@ window.PADDY_HEADS = [
   <script>
 /*
  * FAMINE DATA. Generated from data/famines.csv by scripts/build_data.py. Edit the CSV, then rerun the script.
- * 110 famines, 1064 to 2023.
+ * 100 famines starting 1600 or later, 1601 to 2023.
  */
 window.FAMINES = [
- {
-  "name": "Mustansirite Hardship",
-  "region": "Egypt",
-  "start": 1064,
-  "end": 1072,
-  "deaths": 40000
- },
- {
-  "name": "Harrying of the North",
-  "region": "England",
-  "start": 1069,
-  "end": 1070,
-  "deaths": 100000
- },
- {
-  "name": "Famine and plague",
-  "region": "France",
-  "start": 1097,
-  "end": 1097,
-  "deaths": 100000
- },
- {
-  "name": "Yōwa famine",
-  "region": "Japan",
-  "start": 1180,
-  "end": 1182,
-  "deaths": 42300
- },
- {
-  "name": "Famine in Egypt",
-  "region": "Egypt",
-  "start": 1199,
-  "end": 1202,
-  "deaths": 100000
- },
- {
-  "name": "Kanki famine",
-  "region": "Japan",
-  "start": 1229,
-  "end": 1232,
-  "deaths": 2000000
- },
- {
-  "name": "Famine in England",
-  "region": "England",
-  "start": 1235,
-  "end": 1235,
-  "deaths": 20000
- },
- {
-  "name": "Great famine of 1315–1317",
-  "region": "Europe",
-  "start": 1315,
-  "end": 1317,
-  "deaths": 7500000
- },
- {
-  "name": "Chinese famine of 1333–1337",
-  "region": "China",
-  "start": 1333,
-  "end": 1337,
-  "deaths": 6000000
- },
- {
-  "name": "Kanshō famine",
-  "region": "Japan",
-  "start": 1459,
-  "end": 1461,
-  "deaths": 82000
- },
  {
   "name": "Famine in Russia",
   "region": "Russia",
@@ -1457,8 +1388,8 @@ window.DEATH_BINS = [
   { max: Infinity, label: "10M +" }
 ];
 
-/* Timeline starts at the first famine in the data. */
-window.TIMELINE_DOMAIN = [1064, 2026];
+/* Timeline start (START_YEAR in scripts/build_data.py). */
+window.TIMELINE_DOMAIN = [1600, 2026];
 
 </script>
   <script>
@@ -1508,15 +1439,43 @@ window.TIMELINE_DOMAIN = [1064, 2026];
     h.length = Math.hypot(h.tip.x - h.anchor.x, h.tip.y - h.anchor.y);
   });
 
+  // ---------- in-between grain versions ----------
+  // Each Figma paddy gets a sparser "in-between" version: the outermost tip grains are dropped
+  // (about a quarter of them, keeping at least 4), so it sits between that paddy and the next smaller one.
+  // VARIANTS runs smallest → biggest: [1 light, 1 full, 2 light, 2 full, … 6 full].
+  const VARIANTS = [];
+  HEADS.forEach((h, i) => {
+    const dist = (p) => {
+      const m = p.d.match(/M\s*([-\d.]+)[ ,]([-\d.]+)/);
+      return Math.hypot(+m[1] - h.anchor.x, +m[2] - h.anchor.y);
+    };
+    const keep = Math.max(4, Math.round(h.paths.length * 0.75));
+    const cutoff = h.paths.map(dist).sort((a, b) => a - b)[keep - 1];
+    let kept = 0;
+    const light = h.paths.filter((p) => dist(p) <= cutoff && kept++ < keep);
+    VARIANTS.push({ head: i, light: true, paths: light, id: `head-${i}-light` });
+    VARIANTS.push({ head: i, light: false, paths: h.paths, id: `head-${i}-full` });
+  });
+
   // ---------- data ----------
+  const allDeaths = window.FAMINES.map((f) => f.deaths);
+  const minDeaths = Math.min(...allDeaths), maxDeaths = Math.max(...allDeaths);
   const famines = window.FAMINES.map((f, i) => {
     const duration = Math.max(1, f.end - f.start + 1);
     const bin = binOf(f.deaths);
+    // where the toll sits inside its band, on a log scale (0 = bottom of band, 1 = top)
+    const lo = bin === 0 ? Math.min(minDeaths, BINS[0].max / 2) : BINS[bin - 1].max;
+    const hi = Number.isFinite(BINS[bin].max) ? BINS[bin].max : Math.max(maxDeaths, lo * 2) * 1.0001;
+    const pos = clamp(Math.log(f.deaths / lo) / Math.log(hi / lo), 0, 0.999);
+    const light = pos < 0.5;                        // lower half of band → in-between version
+    const within = light ? pos * 2 : (pos - 0.5) * 2;
     return {
       ...f,
       id: i,
       duration,
       bin,
+      variant: VARIANTS.find((v) => v.head === bin && v.light === light),
+      sizeMul: 0.88 + within * 0.2,                // smooth size step within each version
       lean: 0.28 + seeded(i, 1) * 0.42,       // how far the stem drifts right, relative to its height
       bow: 0.25 + seeded(i, 2) * 0.35,        // how strongly it curves
       tilt: (seeded(i, 3) - 0.5) * 0.22,      // small personal rotation of the grain
@@ -1578,9 +1537,9 @@ window.TIMELINE_DOMAIN = [1064, 2026];
   el("stop", { offset: "1", "stop-color": "#F6A3A3" }, bandGrad);
 
   // reusable head artwork as <symbol>-like groups in defs
-  HEADS.forEach((h, i) => {
-    const g = el("g", { id: `head-${i}` }, defs);
-    h.paths.forEach((p) => el("path", { d: p.d, fill: p.fill }, g));
+  VARIANTS.forEach((v) => {
+    const g = el("g", { id: v.id }, defs);
+    v.paths.forEach((p) => el("path", { d: p.d, fill: p.fill }, g));
   });
 
   const gAxis = el("g", { class: "axis" }, svg);
@@ -1615,7 +1574,7 @@ window.TIMELINE_DOMAIN = [1064, 2026];
     f.hit = el("path", { class: "hit" }, g);
     f.stem = el("path", { class: "stem" }, g);
     f.headG = el("g", { class: "head" }, g);
-    el("use", { href: `#head-${f.bin}` }, f.headG);
+    el("use", { href: `#${f.variant.id}` }, f.headG);
     g.__famine = f;
     g.addEventListener("focus", () => focus(f));
     g.addEventListener("blur", () => unfocus(f));
@@ -1682,17 +1641,20 @@ window.TIMELINE_DOMAIN = [1064, 2026];
   }
 
   // ---------- legend ----------
-  function headSvg(i, size) {
+  function headSvg(i, size, light) {
     const h = HEADS[i];
+    const paths = VARIANTS.find((v) => v.head === i && v.light === !!light).paths;
     const [x0, y0, x1, y1] = h.bbox;
     // all legend glyphs share one scale so their sizes compare honestly
     const s = size / (HEADS[HEADS.length - 1].bbox[3] - HEADS[HEADS.length - 1].bbox[1]);
     const w = (x1 - x0) * s, hh = (y1 - y0) * s;
-    return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${h.paths.map((p) => `<path d="${p.d}" fill="${p.fill}"/>`).join("")}</svg>`;
+    return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${paths.map((p) => `<path d="${p.d}" fill="${p.fill}"/>`).join("")}</svg>`;
   }
   legendEl.innerHTML = `<span class="legend-title">Deaths</span>` +
-    BINS.map((b, i) => `<div class="legend-item">${headSvg(i, 46)}<span>${b.label}</span></div>`).join("");
-  document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 60)).join("");
+    BINS.map((b, i) => `<div class="legend-item"><div class="legend-pair">${headSvg(i, 46, true)}${headSvg(i, 46)}</div><span>${b.label}</span></div>`).join("");
+  document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 60, true) + headSvg(i, 60)).join("");
+  document.getElementById("subtitle").textContent =
+    `${famines.length} famines since ${Math.min(...famines.map((f) => f.start))} and the lives they took`;
 
   // ---------- x-axis ticks ----------
   function niceStep(span, count) {
@@ -1893,7 +1855,7 @@ window.TIMELINE_DOMAIN = [1064, 2026];
     f.stem.setAttribute("d", d);
     f.hit.setAttribute("d", d);
 
-    const s = L.headScale * clamp((g - 0.35) / 0.65, 0, 1);
+    const s = L.headScale * f.sizeMul * clamp((g - 0.35) / 0.65, 0, 1);
     f.headG.setAttribute("transform",
       `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${((rot) * 180 / Math.PI).toFixed(2)}) scale(${s.toFixed(3)}) translate(${-head.anchor.x} ${-head.anchor.y})`);
 

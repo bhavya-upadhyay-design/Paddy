@@ -9,6 +9,7 @@ import csv, json, re, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 REGION_OVERRIDES = {"Kanki famine": "Japan"}  # rows whose name has no region part
+START_YEAR = 1600  # famines that begin before this year are left out, and the timeline starts here
 
 
 def clean(s):
@@ -44,11 +45,12 @@ with open(ROOT / "data/famines.csv", newline="", encoding="utf-8") as f:
             name = f"Famine in {region}"
         rows.append({"name": name, "region": region, "start": start, "end": end, "deaths": deaths})
 
+rows = [r for r in rows if r["start"] >= START_YEAR]
 rows.sort(key=lambda r: (r["start"], r["end"]))
-first = rows[0]["start"]
+first = START_YEAR
 out = f"""/*
  * FAMINE DATA. Generated from data/famines.csv by scripts/build_data.py. Edit the CSV, then rerun the script.
- * {len(rows)} famines, {first} to {max(r['end'] for r in rows)}.
+ * {len(rows)} famines starting {START_YEAR} or later, {rows[0]["start"]} to {max(r['end'] for r in rows)}.
  */
 window.FAMINES = {json.dumps(rows, ensure_ascii=False, indent=1)};
 
@@ -62,7 +64,7 @@ window.DEATH_BINS = [
   {{ max: Infinity, label: "10M +" }}
 ];
 
-/* Timeline starts at the first famine in the data. */
+/* Timeline start (START_YEAR in scripts/build_data.py). */
 window.TIMELINE_DOMAIN = [{first}, 2026];
 """
 (ROOT / "data/famines.js").write_text(out, encoding="utf-8")

@@ -1,78 +1,8 @@
 /*
  * FAMINE DATA. Generated from data/famines.csv by scripts/build_data.py. Edit the CSV, then rerun the script.
- * 110 famines, 1064 to 2023.
+ * 100 famines starting 1600 or later, 1601 to 2023.
  */
 window.FAMINES = [
- {
-  "name": "Mustansirite Hardship",
-  "region": "Egypt",
-  "start": 1064,
-  "end": 1072,
-  "deaths": 40000
- },
- {
-  "name": "Harrying of the North",
-  "region": "England",
-  "start": 1069,
-  "end": 1070,
-  "deaths": 100000
- },
- {
-  "name": "Famine and plague",
-  "region": "France",
-  "start": 1097,
-  "end": 1097,
-  "deaths": 100000
- },
- {
-  "name": "Yōwa famine",
-  "region": "Japan",
-  "start": 1180,
-  "end": 1182,
-  "deaths": 42300
- },
- {
-  "name": "Famine in Egypt",
-  "region": "Egypt",
-  "start": 1199,
-  "end": 1202,
-  "deaths": 100000
- },
- {
-  "name": "Kanki famine",
-  "region": "Japan",
-  "start": 1229,
-  "end": 1232,
-  "deaths": 2000000
- },
- {
-  "name": "Famine in England",
-  "region": "England",
-  "start": 1235,
-  "end": 1235,
-  "deaths": 20000
- },
- {
-  "name": "Great famine of 1315–1317",
-  "region": "Europe",
-  "start": 1315,
-  "end": 1317,
-  "deaths": 7500000
- },
- {
-  "name": "Chinese famine of 1333–1337",
-  "region": "China",
-  "start": 1333,
-  "end": 1337,
-  "deaths": 6000000
- },
- {
-  "name": "Kanshō famine",
-  "region": "Japan",
-  "start": 1459,
-  "end": 1461,
-  "deaths": 82000
- },
  {
   "name": "Famine in Russia",
   "region": "Russia",
@@ -785,5 +715,5 @@ window.DEATH_BINS = [
   { max: Infinity, label: "10M +" }
 ];
 
-/* Timeline starts at the first famine in the data. */
-window.TIMELINE_DOMAIN = [1064, 2026];
+/* Timeline start (START_YEAR in scripts/build_data.py). */
+window.TIMELINE_DOMAIN = [1600, 2026];

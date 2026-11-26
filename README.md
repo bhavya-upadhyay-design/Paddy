@@ -7,7 +7,7 @@ It is modelled on the interaction of [Poppy Field](https://www.poppyfield.org/).
 | --- | --- |
 | Where the stem is rooted on the x-axis | Year the famine began |
 | Height where the stem meets the grain (y-axis) | Duration in years (`end − start + 1`) |
-| Grain artwork (6 sizes, smallest → biggest) | Death toll, binned on a log-like scale |
+| Grain artwork (6 Figma sizes + an in-between version of each, smallest → biggest) | Death toll: band picks the paddy, lower half of a band uses the sparser in-between version, and size scales smoothly within it |
 | Bar along the baseline on hover | The famine's actual start → end span |
 
 ## Interaction
@@ -24,7 +24,7 @@ After editing it, regenerate the site's data file:
 ```bash
 python3 scripts/build_data.py
 ```
-The timeline starts at the first famine in the CSV. The death-toll bin thresholds (`DEATH_BINS`) are set in the script.
+The timeline starts at `START_YEAR` (1600) in the script; earlier famines are left out. The death-toll bin thresholds (`DEATH_BINS`) are set in the script.
 
 ## Files
 - `index.html`, `css/style.css`, `js/app.js`: the site. Plain HTML, CSS and JS, with no build step.

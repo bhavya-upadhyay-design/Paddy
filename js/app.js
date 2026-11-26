@@ -44,15 +44,43 @@
     h.length = Math.hypot(h.tip.x - h.anchor.x, h.tip.y - h.anchor.y);
   });
 
+  // ---------- in-between grain versions ----------
+  // Each Figma paddy gets a sparser "in-between" version: the outermost tip grains are dropped
+  // (about a quarter of them, keeping at least 4), so it sits between that paddy and the next smaller one.
+  // VARIANTS runs smallest → biggest: [1 light, 1 full, 2 light, 2 full, … 6 full].
+  const VARIANTS = [];
+  HEADS.forEach((h, i) => {
+    const dist = (p) => {
+      const m = p.d.match(/M\s*([-\d.]+)[ ,]([-\d.]+)/);
+      return Math.hypot(+m[1] - h.anchor.x, +m[2] - h.anchor.y);
+    };
+    const keep = Math.max(4, Math.round(h.paths.length * 0.75));
+    const cutoff = h.paths.map(dist).sort((a, b) => a - b)[keep - 1];
+    let kept = 0;
+    const light = h.paths.filter((p) => dist(p) <= cutoff && kept++ < keep);
+    VARIANTS.push({ head: i, light: true, paths: light, id: `head-${i}-light` });
+    VARIANTS.push({ head: i, light: false, paths: h.paths, id: `head-${i}-full` });
+  });
+
   // ---------- data ----------
+  const allDeaths = window.FAMINES.map((f) => f.deaths);
+  const minDeaths = Math.min(...allDeaths), maxDeaths = Math.max(...allDeaths);
   const famines = window.FAMINES.map((f, i) => {
     const duration = Math.max(1, f.end - f.start + 1);
     const bin = binOf(f.deaths);
+    // where the toll sits inside its band, on a log scale (0 = bottom of band, 1 = top)
+    const lo = bin === 0 ? Math.min(minDeaths, BINS[0].max / 2) : BINS[bin - 1].max;
+    const hi = Number.isFinite(BINS[bin].max) ? BINS[bin].max : Math.max(maxDeaths, lo * 2) * 1.0001;
+    const pos = clamp(Math.log(f.deaths / lo) / Math.log(hi / lo), 0, 0.999);
+    const light = pos < 0.5;                        // lower half of band → in-between version
+    const within = light ? pos * 2 : (pos - 0.5) * 2;
     return {
       ...f,
       id: i,
       duration,
       bin,
+      variant: VARIANTS.find((v) => v.head === bin && v.light === light),
+      sizeMul: 0.88 + within * 0.2,                // smooth size step within each version
       lean: 0.28 + seeded(i, 1) * 0.42,       // how far the stem drifts right, relative to its height
       bow: 0.25 + seeded(i, 2) * 0.35,        // how strongly it curves
       tilt: (seeded(i, 3) - 0.5) * 0.22,      // small personal rotation of the grain
@@ -114,9 +142,9 @@
   el("stop", { offset: "1", "stop-color": "#F6A3A3" }, bandGrad);
 
   // reusable head artwork as <symbol>-like groups in defs
-  HEADS.forEach((h, i) => {
-    const g = el("g", { id: `head-${i}` }, defs);
-    h.paths.forEach((p) => el("path", { d: p.d, fill: p.fill }, g));
+  VARIANTS.forEach((v) => {
+    const g = el("g", { id: v.id }, defs);
+    v.paths.forEach((p) => el("path", { d: p.d, fill: p.fill }, g));
   });
 
   const gAxis = el("g", { class: "axis" }, svg);
@@ -151,7 +179,7 @@
     f.hit = el("path", { class: "hit" }, g);
     f.stem = el("path", { class: "stem" }, g);
     f.headG = el("g", { class: "head" }, g);
-    el("use", { href: `#head-${f.bin}` }, f.headG);
+    el("use", { href: `#${f.variant.id}` }, f.headG);
     g.__famine = f;
     g.addEventListener("focus", () => focus(f));
     g.addEventListener("blur", () => unfocus(f));
@@ -218,17 +246,20 @@
   }
 
   // ---------- legend ----------
-  function headSvg(i, size) {
+  function headSvg(i, size, light) {
     const h = HEADS[i];
+    const paths = VARIANTS.find((v) => v.head === i && v.light === !!light).paths;
     const [x0, y0, x1, y1] = h.bbox;
     // all legend glyphs share one scale so their sizes compare honestly
     const s = size / (HEADS[HEADS.length - 1].bbox[3] - HEADS[HEADS.length - 1].bbox[1]);
     const w = (x1 - x0) * s, hh = (y1 - y0) * s;
-    return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${h.paths.map((p) => `<path d="${p.d}" fill="${p.fill}"/>`).join("")}</svg>`;
+    return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${paths.map((p) => `<path d="${p.d}" fill="${p.fill}"/>`).join("")}</svg>`;
   }
   legendEl.innerHTML = `<span class="legend-title">Deaths</span>` +
-    BINS.map((b, i) => `<div class="legend-item">${headSvg(i, 46)}<span>${b.label}</span></div>`).join("");
-  document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 60)).join("");
+    BINS.map((b, i) => `<div class="legend-item"><div class="legend-pair">${headSvg(i, 46, true)}${headSvg(i, 46)}</div><span>${b.label}</span></div>`).join("");
+  document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 60, true) + headSvg(i, 60)).join("");
+  document.getElementById("subtitle").textContent =
+    `${famines.length} famines since ${Math.min(...famines.map((f) => f.start))} and the lives they took`;
 
   // ---------- x-axis ticks ----------
   function niceStep(span, count) {
@@ -429,7 +460,7 @@
     f.stem.setAttribute("d", d);
     f.hit.setAttribute("d", d);
 
-    const s = L.headScale * clamp((g - 0.35) / 0.65, 0, 1);
+    const s = L.headScale * f.sizeMul * clamp((g - 0.35) / 0.65, 0, 1);
     f.headG.setAttribute("transform",
       `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${((rot) * 180 / Math.PI).toFixed(2)}) scale(${s.toFixed(3)}) translate(${-head.anchor.x} ${-head.anchor.y})`);
 
