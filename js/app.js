@@ -45,12 +45,12 @@
 
   // ---------- in-between grain versions ----------
   // Each Figma paddy also has a sparser "in-between" version (built by scripts/build_light_heads.js):
-  // fewer grains, the top grain on the left, and a very small grain finishing the tip.
+  // the same designed tip, with the lowest grains at the base of the head removed.
   // VARIANTS runs smallest → biggest: [1 light, 1 full, 2 light, 2 full, … 6 full].
   const VARIANTS = [];
   HEADS.forEach((h, i) => {
-    VARIANTS.push({ head: i, light: true, paths: h.light, id: `head-${i}-light` });
-    VARIANTS.push({ head: i, light: false, paths: h.paths, id: `head-${i}-full` });
+    VARIANTS.push({ head: i, light: true, paths: h.light, anchor: h.lightAnchor, id: `head-${i}-light` });
+    VARIANTS.push({ head: i, light: false, paths: h.paths, anchor: h.anchor, id: `head-${i}-full` });
   });
 
   // Extra enlargement for the bigger paddies, smallest → biggest, so the gap between
@@ -452,7 +452,7 @@
 
     const s = L.headScale * f.sizeMul * clamp((g - 0.35) / 0.65, 0, 1);
     f.headG.setAttribute("transform",
-      `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${((rot) * 180 / Math.PI).toFixed(2)}) scale(${s.toFixed(3)}) translate(${-head.anchor.x} ${-head.anchor.y})`);
+      `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${((rot) * 180 / Math.PI).toFixed(2)}) scale(${s.toFixed(3)}) translate(${-f.variant.anchor.x} ${-f.variant.anchor.y})`);
 
     // fade out paddies whose roots are outside the visible window
     const out = bx < L.left ? (L.left - bx) / 40 : bx > L.right ? (bx - L.right) / 40 : 0;
