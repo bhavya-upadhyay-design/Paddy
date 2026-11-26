@@ -214,7 +214,7 @@ body {
   overflow-y: auto;
 }
 .intro.gone { opacity: 0; visibility: hidden; }
-.intro-inner { max-width: 620px; text-align: center; }
+.intro-inner { width: 100%; max-width: 620px; min-width: 0; text-align: center; }
 .intro h2 {
   font-family: "Fraunces", Georgia, serif;
   font-weight: 300;
@@ -222,13 +222,16 @@ body {
   margin: 0 0 12px;
   letter-spacing: -0.02em;
 }
-.intro .lede { font-size: 17px; line-height: 1.55; margin: 0 auto 28px; max-width: 520px; }
-.howto { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; text-align: left; margin-bottom: 30px; }
-.howto-item { background: rgba(255, 255, 255, 0.5); border-radius: 14px; padding: 16px; }
+.intro .lede { font-size: 17px; line-height: 1.6; margin: 0 auto 22px; max-width: 560px; text-wrap: pretty; }
+.quote { margin: 0 auto 28px; max-width: 480px; padding: 0; }
+.quote p { margin: 0 0 6px; font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 300; font-size: 16px; line-height: 1.5; color: var(--ink); }
+.quote cite { font-style: normal; font-size: 12px; letter-spacing: 0.04em; color: var(--ink-soft); }
+.howto { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; text-align: left; margin-bottom: 30px; }
+.howto-item { background: rgba(255, 255, 255, 0.5); border-radius: 14px; padding: 16px; min-width: 0; }
 .howto-item > svg { width: 64px; height: 64px; display: block; margin-bottom: 8px; }
 .howto-item p { margin: 0; font-size: 14px; line-height: 1.5; }
 .mini-legend { display: flex; align-items: flex-end; gap: 4px; min-height: 64px; margin-bottom: 8px; }
-.mini-legend svg { overflow: visible; }
+.mini-legend svg { overflow: visible; flex: 0 1 auto; min-width: 0; max-width: 100%; height: auto; }
 .enter {
   font: 600 14px/1 "DM Sans", sans-serif;
   letter-spacing: 0.06em;
@@ -251,7 +254,7 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .masthead { left: 16px; top: 16px; }
   .about-btn { right: 16px; top: 16px; }
   .legend { right: 16px; left: 16px; top: auto; bottom: 34px; justify-content: space-between; display: none; }
-  .howto { grid-template-columns: 1fr; }
+  .howto { grid-template-columns: minmax(0, 1fr); }
   .card { width: calc(100vw - 32px); left: 16px !important; }
 }
 
