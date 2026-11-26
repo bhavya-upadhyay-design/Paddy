@@ -254,17 +254,98 @@
     card.style.top = `${cardPos.y.toFixed(1)}px`;
   }
 
-  // ---------- grain glyphs for the intro ----------
-  function headSvg(i, size, light) {
-    const h = HEADS[i];
-    const paths = VARIANTS.find((v) => v.head === i && v.light === !!light).paths;
-    const [x0, y0, x1, y1] = h.bbox;
-    // all legend glyphs share one scale so their sizes compare honestly
-    const s = (size * SIZE_BOOST[i]) / (HEADS[HEADS.length - 1].bbox[3] - HEADS[HEADS.length - 1].bbox[1]);
-    const w = (x1 - x0) * s, hh = (y1 - y0) * s;
-    return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${paths.map((p) => `<path d="${p.d}" fill="${p.fill}"${p.transform ? ` transform="${p.transform}"` : ""}/>`).join("")}</svg>`;
+  // ---------- how to read: the anatomy of one famine ----------
+  // One real stem from the data, drawn large and labelled (root, height, grain), then a strip of all
+  // twelve grain versions along the death-toll scale, with that famine marked on it.
+  const shortNum = (n) => (n >= 1e6 ? `${n / 1e6}M` : `${n / 1e3}K`);
+  function buildAnatomy() {
+    const ex = famines.find((f) => f.start === 1943 && f.deaths === 3000000) ||
+      famines.reduce((a, b) => (b.deaths > a.deaths ? b : a));
+    const exName = ex.start === 1943 && ex.deaths === 3000000 ? "Bengal, 1943" : `${ex.region}, ${ex.start}`;
+    const v = ex.variant, hd = HEADS[v.head];
+
+    // --- the labelled plant ---
+    const VW = 720, VH = 330, G = 236;                       // G: ground line
+    const yr0 = Math.floor((ex.start - 6) / 5) * 5, yr1 = yr0 + 15;
+    const X = (yr) => 90 + ((yr - yr0) / (yr1 - yr0)) * 400;
+    const bx = X(ex.start);
+    const stemH = 40 + Math.min(ex.duration, 6) * 34;       // taller for longer famines
+    const s = 150 / (hd.bbox[3] - hd.bbox[1]);              // grain about 150px tall
+    const hx = bx + 46, hy = G - stemH;
+    const ang = hd.angle;
+    const c1 = [bx + 46 * 0.55, G - stemH * 0.12], c2 = [hx - Math.cos(ang) * stemH * 0.5, hy - Math.sin(ang) * stemH * 0.5];
+    const stem = `M${bx} ${G}C${c1} ${c2} ${hx} ${hy}`;
+    // centre of the grain, for its leader line
+    const gc = [hx + ((hd.bbox[0] + hd.bbox[2]) / 2 - v.anchor.x) * s, hy + ((hd.bbox[1] + hd.bbox[3]) / 2 - v.anchor.y) * s];
+
+    let ticks = "", yearLabels = "";
+    for (let yr = yr0; yr <= yr1; yr++) {
+      const x = X(yr), major = yr % 5 === 0;
+      ticks += `M${x.toFixed(1)} ${G + 3}v${major ? 6 : 3}`;
+      if (major && yr !== ex.start) yearLabels += `<text class="an-year" x="${x}" y="${G + 24}" text-anchor="middle">${yr}</text>`;
+    }
+    const note = (n, x, y, anchor, title, desc, value) => `
+      <g class="an-note an-note-${n}">
+        <text x="${x}" y="${y}" text-anchor="${anchor}"><tspan class="an-key">${n}. ${title}</tspan>
+          <tspan class="an-desc" x="${x}" dy="17">${desc}</tspan>${value ? `
+          <tspan class="an-value" x="${x}" dy="24">${value}</tspan>` : ""}</text>
+      </g>`;
+    const noteX = VW - 200;                                  // grain label column, clear of the grain
+    const brX = bx - 36;
+    document.getElementById("anatomyPlant").setAttribute("viewBox", `0 0 ${VW} ${VH}`);
+    document.getElementById("anatomyPlant").innerHTML = `
+      <path class="an-ground" d="M60 ${G}H${VW - 40}"/>
+      <path class="an-ticks" d="${ticks}"/>
+      ${yearLabels}
+      <text class="an-year an-year-root" x="${bx}" y="${G + 24}" text-anchor="middle">${ex.start}</text>
+      <path class="an-stem" pathLength="1" d="${stem}"/>
+      <g class="an-head"><use href="#${v.id}" transform="translate(${hx} ${hy}) scale(${s.toFixed(4)}) translate(${-v.anchor.x} ${-v.anchor.y})"/></g>
+      <circle class="an-dot" cx="${bx}" cy="${G}" r="3.5"/>
+      <g class="an-note an-note-2"><path class="an-bracket" d="M${brX + 6} ${G}H${brX}V${hy}H${brX + 6}"/></g>
+      <g class="an-note an-note-3"><path class="an-leader" d="M${gc[0].toFixed(1)} ${gc[1].toFixed(1)}L${noteX - 22} 76H${noteX - 10}"/><circle class="an-dot" cx="${gc[0].toFixed(1)}" cy="${gc[1].toFixed(1)}" r="3"/></g>
+      <g class="an-note an-note-1"><path class="an-leader" d="M${bx} ${G + 32}V${G + 44}"/></g>
+      ${note(1, bx, G + 62, "middle", "ROOT", "the year it began", "")}
+      ${note(2, brX - 12, (G + hy) / 2 - 18, "end", "HEIGHT", "how long it lasted", `${ex.duration} year${ex.duration > 1 ? "s" : ""}`)}
+      ${note(3, noteX, 64, "start", "GRAIN", "the lives it took", fmtDeaths(ex.deaths))}
+      <text class="an-example" x="${noteX}" y="130">${exName}</text>
+      ${[[bx, G + 62], [brX - 22, (G + hy) / 2], [noteX + 8, 76]].map(([cx, cy], k) =>
+        `<g class="an-num"><circle cx="${cx}" cy="${cy}" r="17"/><text x="${cx}" y="${cy + 7}" text-anchor="middle">${k + 1}</text></g>`).join("")}`;
+
+    // --- the grain scale: all twelve versions, sized as in the field ---
+    const biggest = HEADS[HEADS.length - 1];
+    const base = 84 / ((biggest.bbox[3] - biggest.bbox[1]) * SIZE_BOOST[HEADS.length - 1] * 0.98);
+    const GY = 92;                                          // glyph baseline
+    let x = 8, glyphs = "", seps = "", mark = "";
+    VARIANTS.forEach((vv, k) => {
+      const h = HEADS[vv.head];
+      const sc = base * SIZE_BOOST[vv.head] * 0.98;
+      const w = (h.bbox[2] - h.bbox[0]) * sc;
+      const slot = Math.max(w, 26);
+      const left = x + (slot - w) / 2;
+      glyphs += `<use href="#${vv.id}" transform="translate(${(left - h.bbox[0] * sc).toFixed(1)} ${(GY - h.bbox[3] * sc).toFixed(1)}) scale(${sc.toFixed(4)})"/>`;
+      if (vv === v) mark = `<path class="an-mark" d="M${x + slot / 2} ${GY + 30}l5 8h-10z"/><text class="an-example" x="${x + slot / 2}" y="${GY + 52}" text-anchor="middle">${exName}</text>`;
+      x += slot + 8;
+      if (!vv.light && vv.head < HEADS.length - 1) {
+        const sx = x - 4;
+        seps += `<path class="an-sep" d="M${sx} ${GY + 2}v8"/><text class="an-thr" x="${sx}" y="${GY + 24}" text-anchor="middle">${shortNum(BINS[vv.head].max)}</text>`;
+      }
+    });
+    const SW = x;
+    document.getElementById("grainScale").setAttribute("viewBox", `0 0 ${SW} 150`);
+    document.getElementById("grainScale").innerHTML = `
+      <path class="an-ground" d="M0 ${GY + 6}H${SW}"/>${glyphs}${seps}${mark}
+      <text class="an-end" x="0" y="${GY + 52}">fewer deaths</text>
+      <text class="an-end" x="${SW}" y="${GY + 52}" text-anchor="end">more deaths</text>`;
   }
-  document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 46, true) + headSvg(i, 46)).join("");
+  buildAnatomy();
+  const anatomy = document.getElementById("anatomy");
+  function playAnatomy() {
+    anatomy.classList.remove("play");
+    void anatomy.getBoundingClientRect();   // restart the drawing animation
+    anatomy.classList.add("play");
+  }
+  playAnatomy();
+
   document.getElementById("subtitle").textContent =
     `${famines.length} famines since ${Math.min(...famines.map((f) => f.start))} and the lives they took`;
 
@@ -564,6 +645,7 @@
   document.getElementById("enterBtn").addEventListener("click", enter);
   document.getElementById("aboutBtn").addEventListener("click", () => {
     intro.classList.remove("gone");
+    playAnatomy();
     document.getElementById("enterBtn").textContent = "Back to the field";
   });
   intro.addEventListener("keydown", (e) => { if (e.key === "Escape") enter(); });
