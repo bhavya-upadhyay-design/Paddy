@@ -227,7 +227,7 @@ body {
 .howto-item { background: rgba(255, 255, 255, 0.5); border-radius: 14px; padding: 16px; }
 .howto-item > svg { width: 64px; height: 64px; display: block; margin-bottom: 8px; }
 .howto-item p { margin: 0; font-size: 14px; line-height: 1.5; }
-.mini-legend { display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-bottom: 8px; }
+.mini-legend { display: flex; align-items: flex-end; gap: 4px; min-height: 64px; margin-bottom: 8px; }
 .mini-legend svg { overflow: visible; }
 .enter {
   font: 600 14px/1 "DM Sans", sans-serif;

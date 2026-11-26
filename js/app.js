@@ -15,7 +15,6 @@
 
   const svg = document.getElementById("field");
   const card = document.getElementById("card");
-  const legendEl = document.getElementById("legend");
 
   // ---------- helpers ----------
   const el = (name, attrs = {}, parent) => {
@@ -62,6 +61,10 @@
     VARIANTS.push({ head: i, light: false, paths: h.paths, id: `head-${i}-full` });
   });
 
+  // Extra enlargement for the bigger paddies, smallest → biggest, so the gap between
+  // the fewest and the most deaths reads strongly. The three smallest stay as drawn.
+  const SIZE_BOOST = [1, 1, 1, 1.25, 1.55, 1.9];
+
   // ---------- data ----------
   const allDeaths = window.FAMINES.map((f) => f.deaths);
   const minDeaths = Math.min(...allDeaths), maxDeaths = Math.max(...allDeaths);
@@ -80,7 +83,7 @@
       duration,
       bin,
       variant: VARIANTS.find((v) => v.head === bin && v.light === light),
-      sizeMul: 0.88 + within * 0.2,                // smooth size step within each version
+      sizeMul: SIZE_BOOST[bin] * (0.88 + within * 0.2),                // smooth size step within each version
       lean: 0.28 + seeded(i, 1) * 0.42,       // how far the stem drifts right, relative to its height
       bow: 0.25 + seeded(i, 2) * 0.35,        // how strongly it curves
       tilt: (seeded(i, 3) - 0.5) * 0.22,      // small personal rotation of the grain
@@ -99,7 +102,7 @@
     H = window.innerHeight;
     const mobile = W < 720;
     const left = mobile ? 44 : clamp(W * 0.15, 90, 220);
-    const right = mobile ? 24 : clamp(W * 0.1, 50, 200);
+    const right = mobile ? 24 : clamp(W * 0.16, 60, 300);
     const baseline = H * (mobile ? 0.74 : 0.79);
     const top = H * (mobile ? 0.36 : 0.32);
     L = {
@@ -206,8 +209,6 @@
     gField.classList.add("has-focus");
     famines.forEach((o) => o.g.classList.toggle("focus", o === f));
     gField.appendChild(f.g); // raise
-    legendEl.classList.add("dim");
-    legendEl.querySelectorAll(".legend-item").forEach((n, i) => n.classList.toggle("on", i === f.bin));
     card.innerHTML = `
       <h3>${f.name}</h3>
       <p class="where">${f.region}</p>
@@ -229,7 +230,6 @@
     focused = null;
     gField.classList.remove("has-focus");
     f.g.classList.remove("focus");
-    legendEl.classList.remove("dim");
     card.classList.remove("show");
     spanBar.classList.remove("on");
     spanLabel.classList.remove("on");
@@ -245,19 +245,17 @@
     card.style.top = `${y}px`;
   }
 
-  // ---------- legend ----------
+  // ---------- grain glyphs for the intro ----------
   function headSvg(i, size, light) {
     const h = HEADS[i];
     const paths = VARIANTS.find((v) => v.head === i && v.light === !!light).paths;
     const [x0, y0, x1, y1] = h.bbox;
     // all legend glyphs share one scale so their sizes compare honestly
-    const s = size / (HEADS[HEADS.length - 1].bbox[3] - HEADS[HEADS.length - 1].bbox[1]);
+    const s = (size * SIZE_BOOST[i]) / (HEADS[HEADS.length - 1].bbox[3] - HEADS[HEADS.length - 1].bbox[1]);
     const w = (x1 - x0) * s, hh = (y1 - y0) * s;
     return `<svg width="${Math.max(w, 6).toFixed(1)}" height="${hh.toFixed(1)}" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" aria-hidden="true">${paths.map((p) => `<path d="${p.d}" fill="${p.fill}"/>`).join("")}</svg>`;
   }
-  legendEl.innerHTML = `<span class="legend-title">Deaths</span>` +
-    BINS.map((b, i) => `<div class="legend-item"><div class="legend-pair">${headSvg(i, 46, true)}${headSvg(i, 46)}</div><span>${b.label}</span></div>`).join("");
-  document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 60, true) + headSvg(i, 60)).join("");
+  document.getElementById("introLegend").innerHTML = BINS.map((b, i) => headSvg(i, 46, true) + headSvg(i, 46)).join("");
   document.getElementById("subtitle").textContent =
     `${famines.length} famines since ${Math.min(...famines.map((f) => f.start))} and the lives they took`;
 
