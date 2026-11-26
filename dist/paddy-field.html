@@ -1699,37 +1699,7 @@ window.TIMELINE_DOMAIN = [1600, 2026];
     };
   });
   const maxDuration = Math.max(...famines.map((f) => f.duration));
-  const Y_MAX = Math.max(10, Math.ceil(maxDuration / 2) * 2);
-
-  // The WHOLE paddy (stem + grain) is as tall as the famine lasted: the grain's tip sits on the
-  // duration line. headUp = how far the grain rises above the point where the stem joins it,
-  // in artwork units, for this famine's own tilt.
-  famines.forEach((f) => {
-    // like ripe rice, the grain bows: paddies of short famines droop further over, so their grain
-    // takes up less height without being drawn any smaller
-    f.tilt += 0.95 * clamp((6 - f.duration) / 5, 0, 1);
-  });
-  // outline points of each grain version, sampled from its drawn paths (filled in once the artwork is in the page)
-  function measureGrains() {
-    const probe = document.createElementNS(NS, "svg");
-    probe.style.cssText = "position:absolute;width:0;height:0;visibility:hidden";
-    document.body.appendChild(probe);
-    VARIANTS.forEach((v) => {
-      v.outline = [];
-      v.paths.forEach((p) => {
-        const n = document.createElementNS(NS, "path");
-        n.setAttribute("d", p.d); probe.appendChild(n);
-        const len = n.getTotalLength();
-        for (let k = 0; k <= 40; k++) { const q = n.getPointAtLength((len * k) / 40); v.outline.push([q.x, q.y]); }
-      });
-    });
-    probe.remove();
-    famines.forEach((f) => {
-      const a = f.variant.anchor, sn = Math.sin(f.tilt), cs = Math.cos(f.tilt);
-      f.headUp = Math.max(...f.variant.outline.map(([x, y]) => -((x - a.x) * sn + (y - a.y) * cs)));
-    });
-  }
-  const STEM_MIN = 10;   // every paddy keeps at least this much visible stem
+  const Y_MAX = Math.max(10, Math.ceil((maxDuration + 1) / 2) * 2);
 
   // ---------- layout ----------
   let W, H, L;
@@ -1740,19 +1710,15 @@ window.TIMELINE_DOMAIN = [1600, 2026];
     const left = mobile ? 44 : clamp(W * 0.15, 90, 220);
     const right = mobile ? 24 : clamp(W * 0.16, 60, 300);
     const baseline = H * (mobile ? 0.74 : 0.79);
-    const top = Math.max(mobile ? 200 : 170, H * (mobile ? 0.3 : 0.2));
+    const top = H * (mobile ? 0.36 : 0.32);
     L = {
       left, right: W - right, baseline, top,
       plotW: W - right - left,
       tlY: H * (mobile ? 0.88 : 0.905),
       tlLeft: mobile ? 16 : clamp(W * 0.07, 40, 120),
       tlRight: W - (mobile ? 16 : clamp(W * 0.07, 40, 120)),
+      headScale: clamp(Math.min(W / 1440, H / 1024), 0.45, 1.3) * (mobile ? 0.42 : 0.5),
     };
-    // one grain-size factor for the whole field: the largest at which every grain still fits inside
-    // its own paddy's height (so relative grain sizes stay true everywhere)
-    const perYear = (baseline - top) / Y_MAX;
-    const maxScale = clamp(Math.min(W / 1440, H / 1024), 0.45, 1.3) * (mobile ? 0.42 : 0.5);
-    L.headScale = Math.min(maxScale, ...famines.map((f) => (f.duration * perYear - STEM_MIN) / (f.sizeMul * f.headUp)));
     L.tlStart = L.tlLeft + (mobile ? 0 : 70);
     L.tlW = L.tlRight - L.tlStart;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
@@ -1918,17 +1884,13 @@ window.TIMELINE_DOMAIN = [1600, 2026];
   for (let x = 20; x <= 180; x += 20) ticks += `M${x} ${GROUND + 3}v5`;
   document.getElementById("keyRoot").innerHTML = ground + `<path class="k-tick" d="${ticks}"/>` +
     plant(80, 62, mid, midScale) + `<circle class="k-dot" cx="80" cy="${GROUND}" r="4.5"/>`;
-  // height: one whole paddy (stem + grain) beside a plain scale running from the ground to the grain's tip
-  const sx = 52, stemX = 88, TOTAL = 104;
-  const midHd = HEADS[mid.head];
-  const grainUp = (mid.anchor.y - midHd.bbox[1]) * midScale;     // grain height above the stem
-  const stemLen = TOTAL - grainUp, tipY = GROUND - TOTAL;
-  const tipX = stemX + stemLen * 0.5 + (midHd.bbox[2] - mid.anchor.x) * midScale;
+  // height: one stem beside a small year scale, with a faint guide from its top to the scale
+  const PER_YEAR = 30, years = 3, sx = 52, stemX = 92, stemTop = GROUND - years * PER_YEAR;
   // a plain line with a short cap at each end, labelled only "yrs"
-  let scale = `<path class="k-scale" d="M${sx} ${GROUND}V${tipY}M${sx - 5} ${GROUND}h10M${sx - 5} ${tipY}h10"/>`;
-  scale += `<text class="k-num" x="${sx}" y="${tipY - 9}" text-anchor="middle">yrs</text>`;
-  const guide = `<path class="k-guide" d="M${sx + 6} ${tipY}H${tipX - 4}"/>`;
-  document.getElementById("keyHeight").innerHTML = ground + scale + guide + plant(stemX, stemLen, mid, midScale);
+  let scale = `<path class="k-scale" d="M${sx} ${GROUND}V${stemTop}M${sx - 5} ${GROUND}h10M${sx - 5} ${stemTop}h10"/>`;
+  scale += `<text class="k-num" x="${sx}" y="${stemTop - 9}" text-anchor="middle">yrs</text>`;
+  const guide = `<path class="k-guide" d="M${sx + 4} ${stemTop}H${stemX + years * PER_YEAR * 0.5}"/>`;
+  document.getElementById("keyHeight").innerHTML = ground + scale + guide + plant(stemX, years * PER_YEAR, mid, midScale);
   // grain: small → big, standing on the ground
   // small, medium, large: shown at clear sizes so the step up reads at a glance
   const steps = [[3, 30], [7, 56], [11, 96]].map(([k, tall]) => {
@@ -2124,8 +2086,7 @@ window.TIMELINE_DOMAIN = [1600, 2026];
     const g = f.grow;
     const bx = xYear(f.start);
     const ex = xYear(f.end + 1);
-    const total = L.baseline - yDur(f.duration);      // whole paddy height = duration
-    const h0 = total - L.headScale * f.sizeMul * f.headUp;   // stem part; the grain fills the rest
+    const h0 = L.baseline - yDur(f.duration);         // full stem height in px
     const h = h0 * easeOutBack(g);
     const head = HEADS[f.bin];
 
@@ -2226,7 +2187,6 @@ window.TIMELINE_DOMAIN = [1600, 2026];
     requestAnimationFrame(frame);
   }
 
-  measureGrains();
   function resize() {
     layout();
     renderYAxis();

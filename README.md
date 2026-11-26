@@ -6,7 +6,7 @@ It is modelled on the interaction of [Poppy Field](https://www.poppyfield.org/).
 | Visual | Data |
 | --- | --- |
 | Where the stem is rooted on the x-axis | Year the famine began |
-| Full paddy height, stem + grain, to the grain's tip (y-axis) | Duration in years (`end − start + 1`). Short famines' grain bows further over so it fits |
+| Height where the stem meets the grain (y-axis) | Duration in years (`end − start + 1`) |
 | Grain artwork (6 Figma sizes + an in-between version of each, smallest → biggest) | Death toll: band picks the paddy, lower half of a band uses the sparser in-between version, and size scales smoothly within it |
 | Bar along the baseline on hover | The famine's actual start → end span |
 
