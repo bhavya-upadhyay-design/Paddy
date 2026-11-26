@@ -130,7 +130,7 @@
   const yUnit = el("text", { class: "axis-label", "text-anchor": "end" }, gAxis);
   yUnit.textContent = "(years)";
   const yTicks = [];
-  const yStep = Y_MAX > 12 ? 4 : 2;
+  const yStep = Y_MAX > 16 ? 4 : 2;
   [1, ...Array.from({ length: Y_MAX / yStep }, (_, k) => (k + 1) * yStep)].forEach((d) => {
     const t = el("text", { class: "axis-label", "text-anchor": "middle" }, gAxis);
     t.textContent = d;
@@ -250,7 +250,7 @@
       d += `M${x.toFixed(1)} ${y0}v${isMajor ? 7 : 4}`;
       if (isMajor) {
         const t = el("text", { class: "axis-label", x: x.toFixed(1), y: y0 + 22, "text-anchor": "middle" }, gXTicks);
-        t.textContent = yr === 1000 ? "1000 AD" : fmtYear(yr);
+        t.textContent = fmtYear(yr);
       }
     }
     el("path", { d, class: "tick" }, gXTicks);

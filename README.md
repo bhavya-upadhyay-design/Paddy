@@ -14,14 +14,17 @@ It is modelled on the interaction of [Poppy Field](https://www.poppyfield.org/).
 - **Elastic timeline**: drag either handle of the bottom timeline, or drag the coloured band to pan.
   The field springs toward the new range, overshoots slightly and settles.
 - **Scroll** on the field (or on the timeline) to zoom around the cursor. Drag the field sideways to pan.
-- **Double-click** (or press `0`) to reset to 1000 AD → 2026. The arrow keys and `+`/`-` also pan and zoom.
+- **Double-click** (or press `0`) to reset to the full range. The arrow keys and `+`/`-` also pan and zoom.
 - **Hover** a paddy, or Tab to it, to open its detail card. The other paddies fade, and its legend size lights up.
 - Stems sway gently in the wind. This is disabled under `prefers-reduced-motion`.
 
 ## Your data
-Edit `data/famines.js`. The current figures are **placeholders**: rough, commonly cited estimates
-used only to build the prototype. Each row needs `name`, `region`, `start`, `end`, `deaths`, and an optional `note`.
-The death-toll bin thresholds (`DEATH_BINS`) and the timeline span (`TIMELINE_DOMAIN`) are in the same file.
+The data lives in `data/famines.csv` (columns: Famine name, Year, Deaths from famines).
+After editing it, regenerate the site's data file:
+```bash
+python3 scripts/build_data.py
+```
+The timeline starts at the first famine in the CSV. The death-toll bin thresholds (`DEATH_BINS`) are set in the script.
 
 ## Files
 - `index.html`, `css/style.css`, `js/app.js`: the site. Plain HTML, CSS and JS, with no build step.
